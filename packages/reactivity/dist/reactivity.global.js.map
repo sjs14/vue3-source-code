@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../shared/src/index.ts", "../src/index.ts"],
+  "sourcesContent": ["export const show = (a: number) => {\n  console.log(a);\n};\n", "import { show } from \"@sjs/shared\";\n\nshow(1);\n"],
+  "mappings": ";;AAAO,MAAM,OAAO,CAAC,MAAc;AACjC,YAAQ,IAAI,CAAC;AAAA,EACf;;;ACAA,OAAK,CAAC;",
+  "names": []
+}

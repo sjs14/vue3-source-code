@@ -1,0 +1,12 @@
+{
+  "name": "@sjs/shared",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "buildOptions": {
+    "formate": [
+      "cjs",
+      "esm-bundler"
+    ]
+  }
+}

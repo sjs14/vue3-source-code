@@ -1,0 +1,14 @@
+{
+  "name": "@sjs/reactivity",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "buildOptions": {
+    "name": "SjsReactivity",
+    "formats": [
+      "global",
+      "cjs",
+      "esm-bundler"
+    ]
+  }
+}
