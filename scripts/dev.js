@@ -1,5 +1,5 @@
 const args = require("minimist")(process.argv.slice(2));
-const {build} = require("esbuild");
+const { build } = require("esbuild");
 const { resolve } = require("path");
 
 const target = args._[0] || "reactivity";

@@ -1,3 +1,3 @@
-export const show = (a: number) => {
-  console.log(a);
+export const isObject = (target) => {
+  return typeof target === "object" && target !== null;
 };

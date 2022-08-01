@@ -1,3 +1,2 @@
-import { show } from "@sjs/shared";
-
-show(1);
+export * from './effect'
+export * from './reactive'
