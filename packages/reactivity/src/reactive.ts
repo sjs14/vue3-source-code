@@ -1,10 +1,8 @@
 import { isObject } from "@sjs/shared";
+import { mutableHandlers, ReactiveFlags } from "./baseHandle";
 
 const reactiveMap = new WeakMap();
 
-const enum ReactiveFlags {
-  IS_REACTIVE = "__v_isReactive",
-}
 
 export function reactive(target) {
   if (!isObject(target)) {
@@ -23,18 +21,7 @@ export function reactive(target) {
     return target;
   }
 
-  const proxy = new Proxy(target, {
-    get(target, key, receiver) {
-      if (key === ReactiveFlags.IS_REACTIVE) {
-        return true;
-      }
-
-      return Reflect.get(target, key, receiver);
-    },
-    set(target, key, value, receiver) {
-      return Reflect.set(target, key, value, receiver);
-    },
-  });
+  const proxy = new Proxy(target, mutableHandlers);
 
   reactiveMap.set(target, proxy);
 
