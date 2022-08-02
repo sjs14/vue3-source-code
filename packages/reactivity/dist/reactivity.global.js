@@ -32,8 +32,9 @@ var SjsReactivity = (() => {
   // packages/reactivity/src/effect.ts
   var activeEffect = void 0;
   var ReactiveEffect = class {
-    constructor(fn) {
+    constructor(fn, scheduler) {
       this.fn = fn;
+      this.scheduler = scheduler;
       this.parent = null;
       this.active = true;
       this.deps = [];
@@ -43,6 +44,7 @@ var SjsReactivity = (() => {
         return this.fn();
       }
       try {
+        clearUpEffect(this);
         this.parent = activeEffect;
         activeEffect = this;
         this.fn();
@@ -50,10 +52,24 @@ var SjsReactivity = (() => {
         activeEffect = this.parent;
       }
     }
+    stop() {
+      this.active = false;
+      clearUpEffect(this);
+    }
   };
-  function effect(fn) {
-    const _effect = new ReactiveEffect(fn);
+  var clearUpEffect = (effect2) => {
+    const { deps } = effect2;
+    deps.forEach((dep) => {
+      dep.delete(effect2);
+    });
+    effect2.deps.length = 0;
+  };
+  function effect(fn, options = {}) {
+    const _effect = new ReactiveEffect(fn, options.scheduler);
     _effect.run();
+    const runner = _effect.run.bind(_effect);
+    runner.effect = _effect;
+    return runner;
   }
   var targetMap = /* @__PURE__ */ new WeakMap();
   var track = (target, type, key) => {
@@ -77,10 +93,11 @@ var SjsReactivity = (() => {
     const depsMap = targetMap.get(target);
     if (!depsMap)
       return;
-    const effects = depsMap.get(key);
+    const effects = [...depsMap.get(key)];
     effects && effects.forEach((effect2) => {
-      if (effect2 !== activeEffect)
-        effect2.run();
+      if (effect2 !== activeEffect) {
+        effect2.scheduler ? effect2.scheduler() : effect2.run();
+      }
     });
   };
 

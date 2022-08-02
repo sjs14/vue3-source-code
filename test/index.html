@@ -16,18 +16,30 @@
     const { reactive, effect } = SjsReactivity;
 
     const state = reactive({
-      name: "sjs",
-      age: 31,
+      father: "sjs",
+      mother: "xcs",
+      withF: true,
     });
 
-    setTimeout(() => {
-      state.age++;
-    }, 2000);
-
-    effect(() => {
-      document.querySelector(
-        "#app"
-      ).innerHTML = `${state.name}今年${state.age}岁了`;
-    });
+    let waiting = false;
+    const runner = effect(
+      () => {
+        console.log("render");
+        document.querySelector("#app").innerHTML = state.withF
+          ? state.father
+          : state.mother;
+      },
+      {
+        scheduler() {
+          if (!waiting) {
+            waiting = true;
+            setTimeout(() => {
+              runner();
+              waiting = false;
+            }, 2000);
+          }
+        },
+      }
+    );
   </script>
 </html>
