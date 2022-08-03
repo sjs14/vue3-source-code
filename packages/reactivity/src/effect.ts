@@ -9,15 +9,17 @@ export class ReactiveEffect {
     if (!this.active) {
       return this.fn();
     }
-
+    let res;
     try {
-      clearUpEffect(this);
       this.parent = activeEffect;
       activeEffect = this;
-      this.fn();
+      clearUpEffect(this);
+      res = this.fn();
     } finally {
       activeEffect = this.parent;
     }
+
+    return res;
   }
 
   stop() {
@@ -35,7 +37,7 @@ const clearUpEffect = (effect) => {
   effect.deps.length = 0;
 };
 
-export function effect(fn, options = {}) {
+export function effect(fn, options: { scheduler?: () => void } = {}) {
   const _effect = new ReactiveEffect(fn, options.scheduler);
 
   // 第一次执行可以收集依赖
@@ -64,23 +66,36 @@ export const track = (target, type, key) => {
     depsMap.set(key, (dep = new Set()));
   }
 
+  tarckEffect(dep);
+};
+
+export function tarckEffect(dep) {
+  if (!activeEffect) return;
   let shouldTrack = !dep.has(activeEffect);
 
   if (shouldTrack) {
     dep.add(activeEffect);
     activeEffect.deps.push(dep);
   }
-};
+}
 
 export const trigger = (target, type, key, oldVal, newVal) => {
   const depsMap = targetMap.get(target);
   if (!depsMap) return;
-  const effects = [...depsMap.get(key)];
+  const effects = depsMap.get(key);
+  triggerEffet(effects);
+};
 
+export function triggerEffet(effects) {
+  effects = [...effects];
   effects &&
     effects.forEach((effect) => {
       if (effect !== activeEffect) {
-        effect.scheduler ? effect.scheduler() : effect.run();
+        try {
+          effect.scheduler ? effect.scheduler() : effect.run();
+        } catch (error) {
+          console.log(error);
+        }
       }
     });
-};
+}

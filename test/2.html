@@ -13,24 +13,26 @@
   <script src="../packages/reactivity/dist/reactivity.global.js"></script>
 
   <script>
-    const { reactive, effect } = SjsReactivity;
-
+    const { reactive, effect, computed } = SjsReactivity;
     const state = reactive({
       father: "sjs",
       mother: "xcs",
-      withF: true,
-      obj: {
-        name: "haha",
-      },
+    });
+
+    const fm = computed(() => {
+      return state.father + "和" + state.mother;
     });
 
     effect(() => {
-      console.log("render");
-      // document.querySelector("#app").innerHTML = state.withF
-      //   ? state.father
-      //   : state.mother;
-
-      document.querySelector("#app").innerHTML = state.obj.name;
+      document.querySelector("#app").innerHTML = fm.value;
     });
+
+    setTimeout(() => {
+      state.father = "沈俊声";
+
+      setTimeout(() => {
+        state.mother = "谢翠珊";
+      }, 1000);
+    }, 1000);
   </script>
 </html>
