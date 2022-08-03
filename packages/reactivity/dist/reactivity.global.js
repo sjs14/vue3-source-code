@@ -20,13 +20,17 @@ var SjsReactivity = (() => {
   // packages/reactivity/src/index.ts
   var src_exports = {};
   __export(src_exports, {
+    ComputedRefImpl: () => ComputedRefImpl,
     ReactiveEffect: () => ReactiveEffect,
     activeEffect: () => activeEffect,
+    computed: () => computed,
     effect: () => effect,
     reactive: () => reactive,
+    tarckEffect: () => tarckEffect,
     targetMap: () => targetMap,
     track: () => track,
-    trigger: () => trigger
+    trigger: () => trigger,
+    triggerEffet: () => triggerEffet
   });
 
   // packages/reactivity/src/effect.ts
@@ -43,14 +47,16 @@ var SjsReactivity = (() => {
       if (!this.active) {
         return this.fn();
       }
+      let res;
       try {
-        clearUpEffect(this);
         this.parent = activeEffect;
         activeEffect = this;
-        this.fn();
+        clearUpEffect(this);
+        res = this.fn();
       } finally {
         activeEffect = this.parent;
       }
+      return res;
     }
     stop() {
       this.active = false;
@@ -83,28 +89,45 @@ var SjsReactivity = (() => {
     if (!dep) {
       depsMap.set(key, dep = /* @__PURE__ */ new Set());
     }
+    tarckEffect(dep);
+  };
+  function tarckEffect(dep) {
+    if (!activeEffect)
+      return;
     let shouldTrack = !dep.has(activeEffect);
     if (shouldTrack) {
       dep.add(activeEffect);
       activeEffect.deps.push(dep);
     }
-  };
+  }
   var trigger = (target, type, key, oldVal, newVal) => {
     const depsMap = targetMap.get(target);
     if (!depsMap)
       return;
-    const effects = [...depsMap.get(key)];
+    const effects = depsMap.get(key);
+    triggerEffet(effects);
+  };
+  function triggerEffet(effects) {
+    effects = [...effects];
     effects && effects.forEach((effect2) => {
       if (effect2 !== activeEffect) {
-        effect2.scheduler ? effect2.scheduler() : effect2.run();
+        try {
+          effect2.scheduler ? effect2.scheduler() : effect2.run();
+        } catch (error) {
+          console.log(error);
+        }
       }
     });
-  };
+  }
 
   // packages/shared/src/index.ts
   var isObject = (target) => {
     return typeof target === "object" && target !== null;
   };
+  var isFunction = (target) => {
+    return typeof target === "function";
+  };
+  var isArray = Array.isArray;
 
   // packages/reactivity/src/baseHandle.ts
   var mutableHandlers = {
@@ -113,7 +136,11 @@ var SjsReactivity = (() => {
         return true;
       }
       track(target, "get", key);
-      return Reflect.get(target, key, receiver);
+      const res = Reflect.get(target, key, receiver);
+      if (isObject(res)) {
+        return reactive(res);
+      }
+      return res;
     },
     set(target, key, value, receiver) {
       let oldVal = target[key];
@@ -142,6 +169,47 @@ var SjsReactivity = (() => {
     reactiveMap.set(target, proxy);
     return proxy;
   }
+
+  // packages/reactivity/src/computed.ts
+  var ComputedRefImpl = class {
+    constructor(getter, setter) {
+      this.setter = setter;
+      this._dirty = true;
+      this.__v_isReadonly = true;
+      this.__v_isRef = true;
+      this.dep = /* @__PURE__ */ new Set();
+      this.effect = new ReactiveEffect(getter, () => {
+        if (!this._dirty) {
+          this._dirty = true;
+          triggerEffet(this.dep);
+        }
+      });
+    }
+    get value() {
+      tarckEffect(this.dep);
+      if (this._dirty) {
+        this._dirty = false;
+        this._value = this.effect.run();
+      }
+      return this._value;
+    }
+    set value(val) {
+      this.setter(val);
+    }
+  };
+  var computed = (getterOrOptions) => {
+    let getter, setter;
+    if (isFunction(getterOrOptions)) {
+      getter = getterOrOptions;
+      setter = () => {
+        console.warn("no set");
+      };
+    } else {
+      getter = getterOrOptions.get;
+      setter = getterOrOptions.set;
+    }
+    return new ComputedRefImpl(getter, setter);
+  };
   return __toCommonJS(src_exports);
 })();
 //# sourceMappingURL=reactivity.global.js.map
