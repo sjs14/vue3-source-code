@@ -30,7 +30,8 @@ var SjsReactivity = (() => {
     targetMap: () => targetMap,
     track: () => track,
     trigger: () => trigger,
-    triggerEffet: () => triggerEffet
+    triggerEffet: () => triggerEffet,
+    watch: () => watch
   });
 
   // packages/reactivity/src/effect.ts
@@ -210,6 +211,46 @@ var SjsReactivity = (() => {
     }
     return new ComputedRefImpl(getter, setter);
   };
+
+  // packages/reactivity/src/watch.ts
+  function traversal(target, set = /* @__PURE__ */ new Set()) {
+    if (!isObject(target))
+      return target;
+    if (set.has(target))
+      return target;
+    Object.keys(target).forEach((key) => {
+      traversal(target[key], set);
+    });
+    return target;
+  }
+  function watch(source, cb) {
+    let getter;
+    if (source["__v_isReactive" /* IS_REACTIVE */]) {
+      getter = () => traversal(source);
+    } else if (isFunction(source)) {
+      getter = source;
+    } else if (isArray(source)) {
+      source.forEach((item) => {
+        watch(item, cb);
+      });
+      return;
+    } else {
+      return;
+    }
+    let clearup;
+    const clearupFn = (fn) => {
+      clearup = fn;
+    };
+    let oldValue;
+    const schedulerCb = () => {
+      const newValue = effect2.run();
+      clearup && clearup();
+      cb(oldValue, newValue, clearupFn);
+      oldValue = newValue;
+    };
+    const effect2 = new ReactiveEffect(getter, schedulerCb);
+    oldValue = effect2.run();
+  }
   return __toCommonJS(src_exports);
 })();
 //# sourceMappingURL=reactivity.global.js.map
