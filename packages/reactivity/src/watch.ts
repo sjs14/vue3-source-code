@@ -30,7 +30,6 @@ export function watch(source, cb) {
   }
 
   let clearup;
-
   const clearupFn = (fn) => {
     clearup = fn;
   };
