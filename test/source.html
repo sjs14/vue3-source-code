@@ -6,31 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
   </head>
-  <body></body>
+  <body>
+    <div id="app"></div>
+  </body>
   <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.2.37/vue.global.min.js"></script>
 
   <script>
-    const { reactive, watch } = Vue;
+    const { ref } = Vue;
 
-    const state = reactive({
-      name: "sjs",
-      addr: {
-        number: 12,
-      },
-    });
-
-    watch(
-      () => state.addr,
-      (o, n) => {
-        console.log(o, n);
-      },
-      {
-        deep: true,
-      }
-    );
+    const r1 = ref(1);
+    document.querySelector("#app").innerText = r1.value;
+    console.log(r1);
 
     setTimeout(() => {
-      state.addr.number = 22;
+      r1.value = 11
+      document.querySelector("#app").innerText = r1.value;
     }, 1000);
   </script>
 </html>
